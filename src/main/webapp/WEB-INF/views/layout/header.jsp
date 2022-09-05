@@ -32,6 +32,7 @@ ${principal.username}
 							<li class="nav-item"><a class="nav-link" href="/logout">로그아웃</a></li>
 						</c:otherwise>
 					</c:choose>
+					
 				</ul>
 			</div>
 		</div>

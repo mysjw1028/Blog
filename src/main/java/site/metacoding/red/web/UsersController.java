@@ -21,7 +21,7 @@ public class UsersController {
 
 	@GetMapping("/logout")
 	public String logout() {
-		System.out.println("fdsaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+	//System.out.println("fdsaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
 		session.invalidate();//내 키값에 있는 데이터를 날려버림
 		return "redirect:/";//해당사용자의 키값만 그 사람만 영역만 
 	}
@@ -30,8 +30,8 @@ public class UsersController {
 	public String login(LoginDto loginDto) {
 		Users usersPS = usersDao.login(loginDto);//PS를 붙여서 구분해야한다 
 		if(usersPS != null) {//로그인인증
-			session.setAttribute("principal", usersPS);//principal인증된유저로 사용됨/ 일반적으로 적는다. 있으면 로그인이 된거
-			return "redirect:/";//boards의 메인
+			session.setAttribute("principal", usersPS);//principal인증된유저로 사용됨/일반적으로 적는다. 있으면 로그인이 된거
+			return "redirect:/";//boards의 메인 /키값은 무조건 스트링이고. usersPS은 오브젝트면 들어올수있다
 		}else {//인증안됨
 			return "redirect:/loginForm";
 		}	
