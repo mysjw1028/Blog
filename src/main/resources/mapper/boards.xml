@@ -9,22 +9,23 @@
 		VALUES(boards_seq.nextval, #{title}, #{content}, #{usersId}, sysdate)
 	</insert>
 
-	<select id="findById"
-		resultType="site.metacoding.red.domain.boards.Boards">
-
+	<select id="findById" resultType="site.metacoding.red.domain.boards.Boards">
 	</select>
 
-	<select id="findAll"
-		resultType="site.metacoding.red.domain.boards.Boards">
-
+	<select id="findAll" resultType="site.metacoding.red.web.dto.response.boards.MainDto">
+		SELECT b.id, b.title, u.username
+		FROM boards b 
+		INNER JOIN users u 
+		ON b.usersId = u.id 
+		ORDER BY b.id DESC
+		OFFSET #{startNum} ROWS FETCH NEXT 10 ROWS ONLY
 	</select>
-
+	
 	<update id="update">
-
+	
 	</update>
-
+	
 	<delete id="delete">
-
+	
 	</delete>
-
 </mapper>
