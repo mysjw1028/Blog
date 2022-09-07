@@ -18,6 +18,7 @@ import site.metacoding.red.domain.users.Users;
 
 import site.metacoding.red.web.dto.request.boards.WriteDto;
 import site.metacoding.red.web.dto.response.boards.MainDto;
+import site.metacoding.red.web.dto.response.boards.PagingDto;
 
 @RequiredArgsConstructor
 @Controller
@@ -43,15 +44,33 @@ public class BoardsController {
 
 		return "redirect:/";
 	}
-	
-	//http://localhost:8000/ -integer로 들어가서 null이기에  작동을 안함 0을 디폴트값으로 해양함
-	//http://localhost:8000/?page=0, 1, 2를 해서 넣어준다.
+
+	// http://localhost:8000/ -integer로 들어가서 null이기에 작동을 안함 0을 디폴트값으로 해양함
+	// http://localhost:8000/?page=0, 1, 2를 해서 넣어준다.
 	@GetMapping({ "/", "/boards" })
-	public String getBoardList(Model model, Integer page) {//사용자가 0 ->0,1-> 10,2->20를 날림 페이지x10을 하면된다. 
-		if(page ==null)page = 0;//한줄은 중괄호 안넣어줘도 된다. 
-		int startNum = page * 10;
+	public String getBoardList(Model model, Integer page) {// 사용자가 0 ->0, 1-> 10, 2->20를 날림 페이지x10을 하면된다.
+		if (page == null)
+			page = 0;// 한줄은 중괄호 안넣어줘도 된다.
+		int startNum = page * 3;
+		//paging.set머시기로 dto완성
 		List<MainDto> boardsList = boardsDao.findAll(startNum);
+		PagingDto paging = boardsDao.paging(page);
+		
+		final int blockCount = 5;
+		int currentBlock = page/blockCount;
+		int startPageNum = 1+ blockCount * currentBlock;
+		int lastPageNum = 5+ blockCount * currentBlock;
+		
+		if(paging.getTotalCount()<lastPageNum) {
+			lastPageNum = paging.getTotalPage();
+		}
+		paging.setBlockCount(blockCount);
+		paging.setCurrentBlock(currentBlock);
+		paging.setStartPageNum(startPageNum);
+		paging.setLastPageNum(lastPageNum);
+		
 		model.addAttribute("boardsList", boardsList);
+		model.addAttribute("paging",paging );// 쿼리가 boardsList. paging를 하나식 실행
 		return "boards/main";
 	}
 
