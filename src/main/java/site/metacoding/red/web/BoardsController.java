@@ -79,10 +79,14 @@ public class BoardsController {
 	public String deleteBoards(@PathVariable Integer id) {
 		Users principal = (Users) session.getAttribute("principal");
 		Boards boardsPS = boardsDao.findById(id);
+		//비정상 요청코드
 		if (boardsPS == null) {// if는 비정상 로직을 타게해서 걸러내는 필터 역할을 하는게 좋다.
+			System.out.println("=========================");
+			System.out.println("없는 번호를 요청하였습니다.");
+			System.out.println("=========================");
 			return "redirect:/boards/" + id;// 비정상 요청 체크
 		}
-		// 인증체크
+		// 인증체크 //메롱
 		if (principal == null) {
 			return "redirect:/loginForm";
 		}
@@ -115,32 +119,39 @@ public class BoardsController {
 
 	// http://localhost:8000/ -integer로 들어가서 null이기에 작동을 안함 0을 디폴트값으로 해양함
 	// http://localhost:8000/?page=0, 1, 2를 해서 넣어준다.
+
+	// 1번째 ? page = 0 & keyword=스프링
 	@GetMapping({ "/", "/boards" })
-	public String getBoardDetail(Model model, Integer page) {// 사용자가 0 ->0, 1-> 10, 2->20를 날림 페이지x10을 하면된다.
-		if (page == null)
+	public String getBoardDetail(Model model, Integer page, String keyword) {// 사용자가 0 ->0, 1-> 10, 2->20를 날림 페이지x10을 //
+																				// 하면된다.
+		System.out.println("Svvada");
+		if (page == null) {
 			page = 0;// 한줄은 중괄호 안넣어줘도 된다.
-		int startNum = page * 3;
-		// paging.set머시기로 dto완성
-		List<MainDto> boardsList = boardsDao.findAll(startNum);
-		PagingDto paging = boardsDao.paging(page);
-
-		final int blockCount = 5;
-		int currentBlock = page / blockCount;
-		int startPageNum = 1 + blockCount * currentBlock;
-		int lastPageNum = 5 + blockCount * currentBlock;
-
-		if (paging.getTotalCount() < lastPageNum) {
-			lastPageNum = paging.getTotalPage();
 		}
-		paging.setBlockCount(blockCount);
-		paging.setCurrentBlock(currentBlock);
-		paging.setStartPageNum(startPageNum);
-		paging.setLastPageNum(lastPageNum);
+		int startNum = page * 3;
 
-		model.addAttribute("boardsList", boardsList);
-		model.addAttribute("paging", paging);// 쿼리가 boardsList. paging를 하나식 실행
+		if (keyword == null || keyword.isEmpty()) {
+			System.out.println("=================================");
+			List<MainDto> boardsList = boardsDao.findAll(startNum);
+			PagingDto paging = boardsDao.paging(page, null);
+			paging.makeBlockInfo(keyword);
+
+			model.addAttribute("boardsList", boardsList);
+			model.addAttribute("paging", paging);	
+		} else {
+
+			List<MainDto> boardsList = boardsDao.findSearch(startNum, keyword);
+			PagingDto paging = boardsDao.paging(page, keyword);
+			paging.makeBlockInfo(keyword);
+
+			model.addAttribute("boardsList", boardsList);
+			model.addAttribute("paging", paging);
+		}
+
 		return "boards/main";
+
 	}
+	// paging.set머시기로 dto완성
 
 	@GetMapping("/boards/{id}")
 	public String getBoardList(@PathVariable Integer id, Model model) {
