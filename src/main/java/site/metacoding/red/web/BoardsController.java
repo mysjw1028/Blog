@@ -15,7 +15,7 @@ import oracle.jdbc.proxy.annotation.Post;
 import site.metacoding.red.domain.boards.Boards;
 import site.metacoding.red.domain.boards.BoardsDao;
 import site.metacoding.red.domain.users.Users;
-
+import site.metacoding.red.web.dto.request.boards.UpdateDto;
 import site.metacoding.red.web.dto.request.boards.WriteDto;
 import site.metacoding.red.web.dto.response.boards.MainDto;
 import site.metacoding.red.web.dto.response.boards.PagingDto;
@@ -26,6 +26,54 @@ public class BoardsController {
 
 	private final HttpSession session;
 	private final BoardsDao boardsDao;
+
+	@PostMapping("/boards/{id}/update")
+	public String update(@PathVariable Integer id, UpdateDto updateDto) {
+		// 1영속화
+		Boards boardsPS = boardsDao.findById(id);
+		Users principal = (Users) session.getAttribute("principal");
+		// 비정상 요청 체크
+		if (boardsPS == null) {
+			return "errors/badPage";
+		}
+		// 인증 체크
+		if (principal == null) {
+			return "redirect:/loginForm";
+		}
+		// 권한 체크 ( 세션 principal.getId() 와 boardsPS의 userId를 비교)
+		if (principal.getId() != boardsPS.getUsersId()) {
+			return "errors/badPage";
+		}
+		// 2변경
+		boardsPS.글수정(updateDto);
+		// 3 수행
+		boardsDao.update(boardsPS);
+
+		return "redirect:/boards/" + id;
+	}
+
+	@GetMapping("/boards/{id}/updateForm")
+	public String updateForm(@PathVariable Integer id, Model model) {
+		Boards boardsPS = boardsDao.findById(id);
+		Users principal = (Users) session.getAttribute("principal");
+
+		// 비정상 요청 체크
+		if (boardsPS == null) {
+			return "errors/badPage";
+		}
+		// 인증 체크
+		if (principal == null) {
+			return "redirect:/loginForm";
+		}
+		// 권한 체크 ( 세션 principal.getId() 와 boardsPS의 userId를 비교)
+		if (principal.getId() != boardsPS.getUsersId()) {
+			return "errors/badPage";
+		}
+
+		model.addAttribute("boards", boardsPS);
+
+		return "boards/updateForm";
+	}
 
 	@PostMapping("/boards/{id}/delete") // 프라이머리 키라서 패스벨루로 받음 / 아닌걱는 쿼리스트링/동사는걸면 안된다.
 	public String deleteBoards(@PathVariable Integer id) {
@@ -42,8 +90,8 @@ public class BoardsController {
 		if (principal.getId() != boardsPS.getUsersId()) {
 			return "redirect:/boards/" + id;
 		}
-		boardsDao.delete(id);// 변경이 됬는지/ 이미 셀렉화되어있는지 영속화해서체크 트랙젝션을 안타는게 중요함
-		return "redirect:/";
+		boardsDao.delete(id);// 핵심로직!/ 공통로직이 더 길고. 시간을 더 많이 잡아먹게된다. -> 공통로직은 분리가 될수있고 실행할수도있다.
+		return "redirect:/";// 변경이 됬는지/ 이미 셀렉화되어있는지 영속화해서체크 트랙젝션을 안타는게 중요함
 		// 영속화하는게좋음 ->트래젝션 때문에
 	}
 
